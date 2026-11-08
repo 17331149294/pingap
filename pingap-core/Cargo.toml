@@ -21,6 +21,7 @@ http = { workspace = true }
 ipnet = { workspace = true }
 itoa = { workspace = true }
 opentelemetry = { workspace = true, optional = true }
+maxminddb = { workspace = true }
 pingora = { workspace = true }
 pingora-limits = { workspace = true }
 serde = { workspace = true }

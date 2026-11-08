@@ -99,6 +99,7 @@ export default {
     groupPath: "流量链路",
     groupPolicy: "策略",
     groupSystem: "系统",
+    geoMap: "访问地图",
     upstreamsDown: "{{count}} 个上游有后端无法访问",
     searchEmpty: "无匹配项",
     searchPlaceholder: "搜索…",
@@ -110,6 +111,20 @@ export default {
     password: "密码",
     submit: "登录",
     fail: "登录失败",
+  },
+  worldMap: {
+    title: "世界地图",
+    description:
+      "请求来自哪里：每个请求经 GeoIP 数据库查询后按国家/地区计数",
+    totalRequests: "已记录请求",
+    countriesCount: "国家与地区",
+    topCountries: "Top 10",
+    requests: "次请求",
+    noData: "暂无请求数据。",
+    dbNotConfigured:
+      "尚未配置 GeoIP 数据库。将 PINGAP_GEOIP_DB 指向 MaxMind GeoLite2 的 .mmdb 文件即可启用查询。",
+    pollHint:
+      "页面打开期间每 10 秒自动刷新。国家数据保存在内存中，重启后重新统计。",
   },
   home: {
     dashboard: "仪表盘",

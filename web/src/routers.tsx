@@ -11,6 +11,7 @@ import { LoadingPage } from "@/components/loading";
 // Eager: shell + error boundary. Everything else is route-split so the first
 // paint stays light and unused config pages are not downloaded up front.
 const Home = lazy(() => import("@/pages/Home"));
+const WorldMap = lazy(() => import("@/pages/WorldMap"));
 const Basic = lazy(() => import("@/pages/Basic"));
 const Servers = lazy(() => import("@/pages/Servers"));
 const Locations = lazy(() => import("@/pages/Locations"));
@@ -23,6 +24,7 @@ const Login = lazy(() => import("@/pages/Login"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
 
 export const HOME = "/";
+export const WORLD_MAP = "/world-map";
 export const BASIC = "/basic";
 export const SERVERS = "/servers";
 export const LOCATIONS = "/locations";
@@ -61,6 +63,7 @@ const entityBases = [
 // Everything inside the app shell. Login is deliberately not here.
 const pages = [
   { path: HOME, element: suspense(<Home />) },
+  { path: WORLD_MAP, element: suspense(<WorldMap />) },
   { path: BASIC, element: suspense(<Basic />) },
   { path: SERVERS, element: suspense(<Servers />) },
   { path: LOCATIONS, element: suspense(<Locations />) },

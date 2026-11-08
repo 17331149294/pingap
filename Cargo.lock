@@ -4156,6 +4156,7 @@ dependencies = [
  "http",
  "ipnet",
  "itoa",
+ "maxminddb",
  "opentelemetry",
  "pingora",
  "pingora-limits",

@@ -1,0 +1,20 @@
+# The release image for the musl static binaries that
+# .github/workflows/docker-publish.yml builds: one architecture per
+# build (the binary is passed in by path), and the per-arch images are
+# then merged into one multi-arch manifest with `imagetools create`.
+#
+# The binary is static (musl), so the base only has to give it the CA
+# certificates and the same conf directory layout the upstream image uses.
+FROM alpine:3.22
+
+ARG BINARY_PATH
+COPY ${BINARY_PATH} /usr/local/bin/pingap
+RUN apk add --no-cache bash ca-certificates \
+    && chmod +x /usr/local/bin/pingap \
+    && mkdir -p /opt/pingap/conf
+
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+ENTRYPOINT ["/entrypoint.sh"]
+CMD ["pingap"]

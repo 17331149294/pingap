@@ -1,0 +1,171 @@
+name: Docker Publish
+
+# Manual cloud build: three musl static binaries (amd64, arm64, armv6),
+# one image per architecture, merged into a single multi-arch manifest
+# and pushed to GitHub Packages (ghcr.io).
+#
+#   ghcr.io/<owner>/pingap:<tag>
+#
+# The tag defaults to the version in Cargo.toml. `latest` is pushed as
+# well.
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Image tag (defaults to the version in Cargo.toml)"
+        required: false
+        default: ""
+
+env:
+  IMAGE: ghcr.io/${{ github.repository_owner }}/pingap
+
+jobs:
+  build:
+    name: Build ${{ matrix.target }}
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: x86_64-unknown-linux-musl
+            cross-image: messense/rust-musl-cross:x86_64-musl
+            suffix: amd64
+          - target: aarch64-unknown-linux-musl
+            cross-image: messense/rust-musl-cross:aarch64-musl
+            suffix: arm64
+          - target: arm-unknown-linux-musleabihf
+            cross-image: messense/rust-musl-cross:arm-musleabihf
+            suffix: armv6
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: make build-web
+        run: make build-web
+
+      - name: Build ${{ matrix.target }} binary
+        run: |
+          docker run --rm -v "$PWD:/home/rust/src" \
+            ${{ matrix.cross-image }} sh -ec '
+            apt-get update -qq
+            apt-get install -y -qq protobuf-compiler
+            printf "[safe]\n\tdirectory = *\n" >> ~/.gitconfig
+            cargo build --release --target ${{ matrix.target }}
+            '
+      - name: Smoke test binary metadata
+        run: |
+          file target/${{ matrix.target }}/release/pingap
+
+      - name: Upload binary artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pingap-${{ matrix.suffix }}
+          path: target/${{ matrix.target }}/release/pingap
+          retention-days: 3
+
+  docker:
+    name: Docker ${{ matrix.suffix }}
+    runs-on: ubuntu-24.04
+    needs: [build]
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - suffix: amd64
+            platform: linux/amd64
+          - suffix: arm64
+            platform: linux/arm64
+          - suffix: armv6
+            platform: linux/arm/v6
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download ${{ matrix.suffix }} binary
+        uses: actions/download-artifact@v4
+        with:
+          name: pingap-${{ matrix.suffix }}
+          path: binaries/
+
+      - name: Prepare build context
+        run: |
+          chmod +x binaries/pingap
+          mkdir -p docker-context/${{ matrix.suffix }}
+          mv binaries/pingap docker-context/${{ matrix.suffix }}/pingap
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: arm64,arm
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push ${{ matrix.platform }} image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile.release
+          platforms: ${{ matrix.platform }}
+          push: true
+          build-args: |
+            BINARY_PATH=docker-context/${{ matrix.suffix }}/pingap
+          tags: ${{ env.IMAGE }}:${{ matrix.suffix }}-staging
+
+  merge:
+    name: Merge multi-arch manifest
+    runs-on: ubuntu-24.04
+    needs: [docker]
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Resolve tag
+        id: tag
+        run: |
+          if [ -n "${{ github.event.inputs.tag }}" ]; then
+            echo "tag=${{ github.event.inputs.tag }}" >> "$GITHUB_OUTPUT"
+          else
+            VERSION=$(awk '/^\[workspace\.package\]/{f=1;next} f&&/^version = /{gsub(/"/,"",$3);print $3;exit}' Cargo.toml)
+            echo "tag=$VERSION" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create and push multi-arch manifest
+        run: |
+          TAG=${{ steps.tag.outputs.tag }}
+          docker buildx imagetools create \
+            -t "$IMAGE:$TAG" \
+            -t "$IMAGE:latest" \
+            "$IMAGE:amd64-staging" \
+            "$IMAGE:arm64-staging" \
+            "$IMAGE:armv6-staging"
+        env:
+          IMAGE: ${{ env.IMAGE }}
+
+      - name: Show result
+        run: |
+          TAG=${{ steps.tag.outputs.tag }}
+          docker buildx imagetools inspect "$IMAGE:$TAG"

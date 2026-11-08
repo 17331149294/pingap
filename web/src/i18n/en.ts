@@ -102,6 +102,7 @@ export default {
     groupPath: "Traffic path",
     groupPolicy: "Policy",
     groupSystem: "System",
+    geoMap: "World Map",
     upstreamsDown: "{{count}} with a backend that does not answer",
     searchEmpty: "No matches",
     searchPlaceholder: "Search…",
@@ -113,6 +114,20 @@ export default {
     password: "Password",
     submit: "Login",
     fail: "Login Fail",
+  },
+  worldMap: {
+    title: "World Map",
+    description:
+      "Where the requests come from: every accepted request is looked up in a GeoIP database and counted by country",
+    totalRequests: "Recorded requests",
+    countriesCount: "Countries & regions",
+    topCountries: "Top 10",
+    requests: "requests",
+    noData: "No requests recorded yet.",
+    dbNotConfigured:
+      "GeoIP database is not configured. Set PINGAP_GEOIP_DB to a MaxMind GeoLite2 .mmdb file to enable the lookup.",
+    pollHint:
+      "Refreshed every 10 seconds while the page is open. Country data is kept in memory and starts empty on a restart.",
   },
   home: {
     dashboard: "Dashboard",

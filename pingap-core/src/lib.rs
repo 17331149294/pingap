@@ -102,6 +102,7 @@ pub const ACCESS_LOG_PRESETS: [&str; 5] =
     ["combined", "common", "short", "tiny", "json"];
 
 mod compression;
+mod geo_stats;
 mod ctx;
 mod http_header;
 mod http_response;
@@ -134,6 +135,7 @@ pub use tinyufo::TinyUfo;
 pub use ttl_lru_limit::*;
 pub use unix_addr::unix_socket_path;
 pub use util::*;
+pub use geo_stats::*;
 
 /// Builds an HTTP/1 session that has read `GET <url>` with `headers`, for
 /// tests that need a real `Session` without a socket.

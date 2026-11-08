@@ -19,6 +19,28 @@
 
 指标、链路追踪和图片优化在 `-full` 构建里。
 
+## 🗺️ 世界地图访问来源（本分支新增）
+
+本分支在 Web 管理后台新增了一张实时世界地图：每个被接受的请求，其客户端 IP 会经 GeoIP 数据库查询并按国家/地区计数。新增的「访问地图」页面以气泡大小展示各国请求量，右侧附 Top 10 榜单。数据来自管理 API `GET /api/geo_stats`。
+
+两个环境变量控制该功能：
+
+| 变量 | 说明 |
+| --- | --- |
+| `PINGAP_GEOIP_DB` | MaxMind 数据库文件路径（`.mmdb`），例如免费的 [GeoLite2 City](https://github.com/P3TERX/GeoLite.mmdb/releases)。未设置时地图为空并给出提示。 |
+| `PINGAP_GEO_DEMO` | 设为 `1` 时注入少量演示数据，方便新装环境查看效果。页面上有明确标注，并非真实流量。 |
+
+统计保存在内存中（本机与内网地址自动跳过），进程重启后重新计数；未配置数据库时对请求路径零开销。
+
+### 手动多架构云编译
+
+`Docker Publish`（`.github/workflows/docker-publish.yml`）支持手动触发（`workflow_dispatch`），为 **amd64、arm64、armv6** 三个架构编译 musl 静态二进制，按架构打包镜像后合并为单一 manifest 推送到 GitHub Packages：
+
+```sh
+gh workflow run docker-publish.yml          # 或在 GitHub 页面点 "Run workflow"
+docker pull ghcr.io/<owner>/pingap:latest   # 多架构：amd64 / arm64 / armv6
+```
+
 ## 🚀 快速入门
 
 ### Docker Compose

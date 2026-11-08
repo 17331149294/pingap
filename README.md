@@ -19,6 +19,28 @@ The rest of what a reverse proxy does is there too: HTTP/1.1, HTTP/2, WebSocket 
 
 Metrics, tracing and image optimisation are in the `-full` builds.
 
+## 🗺️ World Map of Access Origins (this fork)
+
+This fork adds a live world map to the web admin: every accepted request's client IP is looked up in a GeoIP database and counted by country, and the new **World Map** page charts the origins as bubbles sized by request count, with a top-10 list beside it. The data comes from the admin API `GET /api/geo_stats`.
+
+Two environment variables control it:
+
+| Variable | Meaning |
+| --- | --- |
+| `PINGAP_GEOIP_DB` | Path to a MaxMind DB file (`.mmdb`), e.g. the free [GeoLite2 City](https://github.com/P3TERX/GeoLite.mmdb/releases). Without it the map stays empty and says so. |
+| `PINGAP_GEO_DEMO` | Set to `1` to seed a few countries with sample counts, so a fresh install has something to look at. Clearly labelled on the page — not real traffic. |
+
+The stats are kept in memory (local and private addresses are skipped), start empty on a restart, and add nothing to the request path when no database is configured.
+
+### Manual multi-arch cloud build
+
+`Docker Publish` (`.github/workflows/docker-publish.yml`) builds musl static binaries for **amd64, arm64 and armv6** by hand (`workflow_dispatch`), packs one image per architecture and merges them into a single manifest pushed to GitHub Packages:
+
+```sh
+gh workflow run docker-publish.yml          # or "Run workflow" on GitHub
+docker pull ghcr.io/<owner>/pingap:latest   # multi-arch: amd64 / arm64 / armv6
+```
+
 ## 🚀 Getting Started
 
 ### Docker Compose

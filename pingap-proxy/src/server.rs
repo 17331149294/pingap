@@ -1023,6 +1023,10 @@ impl Server {
         };
         accept_request();
 
+        // The world map page: one country lookup per accepted request,
+        // a no-op unless PINGAP_GEOIP_DB names a database file.
+        pingap_core::record_client_ip(&pingap_core::get_client_ip(session));
+
         ctx.state.processing_count =
             self.processing.fetch_add(1, Ordering::Relaxed) + 1;
         ctx.state.accepted_count =

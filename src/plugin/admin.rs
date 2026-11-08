@@ -1443,6 +1443,12 @@ async fn handle_request_admin(
         // home page: kept in memory, in any build.
         HttpResponse::try_from_json(&pingap_performance::traffic_snapshot())
             .unwrap_or(HttpResponse::unknown_error("Json serde fail"))
+    } else if path == "/geo_stats" {
+        // The origins of the proxied requests by country, for the world
+        // map page: kept in memory, empty unless PINGAP_GEOIP_DB names a
+        // MaxMind DB file.
+        HttpResponse::try_from_json(&pingap_core::geo_stats_snapshot())
+            .unwrap_or(HttpResponse::unknown_error("Json serde fail"))
     } else if path == "/restart" && method == Method::POST {
         if let Err(e) = restart_now().await {
             error!(target: LOG_TARGET, error = e.to_string(), "Restart fail");

@@ -9,6 +9,7 @@ import {
   PlugZap,
   ShieldCheck,
   Container,
+  Globe2,
   Search,
 } from "lucide-react";
 import {
@@ -20,6 +21,7 @@ import {
   PLUGINS,
   CERTIFICATES,
   STORAGES,
+  WORLD_MAP,
 } from "@/routers.tsx";
 import useConfigState from "@/states/config";
 import useBasicState from "@/states/basic";
@@ -425,6 +427,13 @@ export function MainSidebar({
       path: CERTIFICATES,
       group: "policy",
       children: generateChildren(CERTIFICATES, certificates),
+    },
+    {
+      title: navI18n("geoMap"),
+      icon: Globe2,
+      variant: getVariant(WORLD_MAP),
+      path: WORLD_MAP,
+      group: "system",
     },
     {
       title: navI18n("basic"),
